@@ -3,10 +3,11 @@ package com.the.good.club.core.service;
 import com.google.protobuf.ByteString;
 import com.the.good.club.core.connector.EmailConnector;
 import com.the.good.club.dataU.sdk.DataIdentificationGraphHelper;
-//import com.the.good.club.core.dataU.sdk.ProxyUClient;
+import com.the.good.club.dataU.sdk.ProxyUClient;
 import com.the.good.club.core.spi.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -31,19 +32,18 @@ public class UserPermissionService {
     private final String DASHBOARDU_ENDPOINT = "https://dev.datau.eu/#/decode";
 
     private final EmailConnector emailConnector;
-//    private final ProxyUClient proxyUClient;
+    private final ProxyUClient proxyUClient;
     private final UserRepository userRepository;
 
-    public UserPermissionService(EmailConnector emailConnector, UserRepository userRepository
-                                 //@Lazy ProxyUClient proxyUClient) {
-    ) {
+    public UserPermissionService(EmailConnector emailConnector, UserRepository userRepository,
+                                 @Lazy ProxyUClient proxyUClient) {
         this.emailConnector = emailConnector;
-//        this.proxyUClient = proxyUClient;
+        this.proxyUClient = proxyUClient;
         this.userRepository = userRepository;
     }
 
     public void requestCorrelation(String email) {
-        String correlationMessage = "";//proxyUClient.createCorrelationMessage();
+        String correlationMessage = proxyUClient.createCorrelationMessage();
         String correlationLink = getCorrelationLink(correlationMessage);
         userRepository.save(email, correlationMessage);
         emailConnector.sendSimpleMessage(email, SUBJECT, correlationLink);
@@ -68,9 +68,9 @@ public class UserPermissionService {
 
         ByteString policyHash = getTermsAndConditionsPolicyHash();
 
-        String permissionRequestMessage = "";// proxyUClient.createPermissionRequestMessage(
-//                dataRightsSubject, data, individualProcess, reason, policyHash, 1605087413, 1893456000, 0, 1
-//        );
+        String permissionRequestMessage = proxyUClient.createPermissionRequestMessage(
+                dataRightsSubject, data, individualProcess, reason, policyHash, 1605087413, 1893456000, 0, 1
+        );
 
         return DASHBOARDU_ENDPOINT + "?message=" + URLEncoder.encode(permissionRequestMessage, StandardCharsets.UTF_8);
     }
