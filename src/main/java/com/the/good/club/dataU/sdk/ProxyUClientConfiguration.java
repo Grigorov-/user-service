@@ -1,5 +1,6 @@
 package com.the.good.club.dataU.sdk;
 
+import com.the.good.club.core.service.CertificatesService;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.NegotiationType;
@@ -32,23 +33,19 @@ import static java.security.spec.NamedParameterSpec.ED25519;
 @Configuration
 public class ProxyUClientConfiguration {
 
-    @Value("${proxyU.privateKey}")
-    private String proxyuKey;
-
-    @Value("${proxyU.certificate}")
-    private String proxyuCert;
-
-    @Value("${proxyU.rootCertificate}")
-    private String rootCA;
-
     @Value("${proxyU.host}")
     private String target;
 
+    private final CertificatesService certificatesService;
+
+    public ProxyUClientConfiguration(CertificatesService certificatesService) {
+        this.certificatesService = certificatesService;
+    }
+
     @Bean
     ManagedChannel proxyUChannel() throws IOException, NoSuchAlgorithmException, KeyStoreException, InvalidKeySpecException, CertificateException, UnrecoverableKeyException {
-
-        PrivateKey privateKey = readPKCS8PrivateKey(new File(proxyuKey));
-        Certificate[] certificateChain = readCertificateChain(new File(proxyuCert));
+        PrivateKey privateKey = certificatesService.loadPrivateKey();
+        Certificate[] certificateChain = certificatesService.loadCertificateChain();
 
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, null);
@@ -58,7 +55,7 @@ public class ProxyUClientConfiguration {
         keyManagerFactory.init(keyStore, null);
 
         SslContext sslContext = GrpcSslContexts.forClient()
-                .trustManager(new File(rootCA))
+                .trustManager(certificatesService.loadRootCA())
                 .keyManager(keyManagerFactory.getKeyManagers()[0])
                 .build();
 
