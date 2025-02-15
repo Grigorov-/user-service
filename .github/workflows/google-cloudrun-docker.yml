@@ -77,15 +77,17 @@ jobs:
           DOCKER_TAG="$${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
           docker build --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy ${{ env.SERVICE }} \
-            --region=${{ env.REGION }} \
-            --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }} \
-            --service-account=github-deploy-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
-            --build-logs-bucket=gs://${{ env.PROJECT_ID }}-cloudbuild-logs/ \
-            --logging=CLOUD_LOGGING_ONLY
-
+      - name: 'Deploy to Cloud Run'
+        # END - Docker auth and build
+        uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
+        with:
+          service: '${{ env.SERVICE }}'
+          region: '${{ env.REGION }}'
+          # NOTE: If using a pre-built image, update the image name below:
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}'
+          service_account: 'github-deploy-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
+          logs_bucket: 'elevated-style-450709-s6.appspot.com'
+        
       # If required, use the Cloud Run URL output in later steps
       - name: 'Show output'
         run: |2-
