@@ -36,8 +36,9 @@ on:
 
 env:
   PROJECT_ID: 'elevated-style-450709-s6' 
-  REGION: 'europe-west1' # TODO: update to your region
-  SERVICE: 'datau-user-service' # TODO: update to your service name
+  REGION: 'europe-west1'
+  SERVICE: 'datau-user-service' 
+  WORKLOAD_IDENTITY_PROVIDER: 'projects/529603190015/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
 
 jobs:
   deploy:
@@ -57,9 +58,9 @@ jobs:
       # including authenticating via a JSON credentials file.
       - id: 'auth'
         name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2' # google-github-actions/auth@v2
+        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2' # google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}' # Replace with the name of your GitHub Actions secret
+          workload_identity_provider: '${{ env.WORKLOAD_IDENTITY_PROVIDER }}'
 
       # BEGIN - Docker auth and build
       #
