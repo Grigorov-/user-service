@@ -14,8 +14,8 @@ public class MailConfiguration {
 
     private static final String SMTP_GMAIL_COM = "smtp.gmail.com";
     private static final int GMAIL_PORT = 587;
-    private static final String GMAIL_USERNAME_SECRET_KEY = "gmail-username";
-    private static final String GMAIL_PASSWORD_SECRET_KEY = "gmail-password";
+    private static final String GMAIL_USERNAME_SECRET_KEY = "mail-username";
+    private static final String GMAIL_PASSWORD_SECRET_KEY = "mail-password";
     private final SecretManagerService secretManagerService;
 
     public MailConfiguration(SecretManagerService secretManagerService) {
