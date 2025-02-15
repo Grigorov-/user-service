@@ -74,8 +74,8 @@ jobs:
 
       - name: 'Build and Push Container'
         run: |-
-          DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
-          gcloud builds submit --substitutions=_DOCKER_TAG=$DOCKER_TAG --build-options=log-streaming-option=CLOUD_LOGGING_ONLY
+          DOCKER_TAG="$${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build --logging=CLOUD_LOGGING_ONLY --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
       - name: 'Deploy to Cloud Run'
         # END - Docker auth and build
