@@ -89,7 +89,7 @@ jobs:
 
           image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}'
           service_account: 'github-deploy-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com'
-          flags: '--logging=CLOUD_LOGGING_ONLY'
+          flags: '--logging=NONE'
 
       # If required, use the Cloud Run URL output in later steps
       - name: 'Show output'
