@@ -36,6 +36,9 @@ public class ProxyUClientConfiguration {
     @Value("${proxyU.host}")
     private String target;
 
+    @Value("${proxyU.ip}")
+    private String targetIp;
+
     private final CertificatesService certificatesService;
 
     public ProxyUClientConfiguration(CertificatesService certificatesService) {
@@ -59,7 +62,8 @@ public class ProxyUClientConfiguration {
                 .keyManager(keyManagerFactory.getKeyManagers()[0])
                 .build();
 
-        return NettyChannelBuilder.forTarget(target)
+        return NettyChannelBuilder.forTarget(targetIp)
+                .overrideAuthority(target)
                 .negotiationType(NegotiationType.TLS)
                 .sslContext(sslContext)
                 .build();
