@@ -1,29 +1,49 @@
 package com.the.good.club.core.dataU.client;
 
 import com.google.protobuf.ByteString;
+import com.the.good.club.core.spi.UserDataRepository;
 import com.the.good.club.dataU.sdk.ProxyUClientStorage;
 import com.the.good.club.dataU.sdk.UserData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import static com.the.good.club.dataU.sdk.ClientUtils.byteStringToUUIDString;
+import static java.util.Base64.getEncoder;
 
 @Component
 public class ProxyUStorage implements ProxyUClientStorage {
+    private static final Logger logger = LoggerFactory.getLogger(ProxyUStorage.class);
+
+    private final UserDataRepository userDataRepository;
+
+    public ProxyUStorage(UserDataRepository userDataRepository) {
+        this.userDataRepository = userDataRepository;
+    }
+
     @Override
     public void saveOrUpdateBulkUserData(ByteString subject, ByteString dataUUID, ByteString process, ByteString filename, String mime, ByteString dataValue) {
         ProxyUClientStorage.super.saveOrUpdateBulkUserData(subject, dataUUID, process, filename, mime, dataValue);
     }
 
     @Override
-    public void saveOrUpdateUserData(ByteString subject, ByteString dataUUID, ByteString process, String mime, ByteString dataValue) {
-
+    public void saveOrUpdateUserData(ByteString subjectPublicKey, ByteString dataUUID, ByteString process, String mime, ByteString dataValue) {
+        userDataRepository.save(encodePublicKey(subjectPublicKey), byteStringToUUIDString(dataUUID),
+                byteStringToUUIDString(process), mime, dataValue.toStringUtf8());
     }
 
     @Override
-    public UserData extractUserData(ByteString subject, ByteString dataUUID, ByteString process) {
-        return null;
+    public UserData extractUserData(ByteString userPublicKey, ByteString dataUUID, ByteString process) {
+        return userDataRepository.getById(encodePublicKey(userPublicKey), byteStringToUUIDString(dataUUID));
     }
 
     @Override
-    public void deleteData(ByteString subject, ByteString dataUUID, ByteString process) {
+    public void deleteData(ByteString userPublicKey, ByteString dataUUID, ByteString process) {
+        //TODO how process should be handled here
+        userDataRepository.delete(encodePublicKey(userPublicKey), byteStringToUUIDString(dataUUID));
+    }
 
+    private String encodePublicKey(ByteString publicKey) {
+        return getEncoder().encodeToString(publicKey.toByteArray());
     }
 }

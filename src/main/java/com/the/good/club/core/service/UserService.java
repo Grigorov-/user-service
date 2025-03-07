@@ -1,7 +1,10 @@
 package com.the.good.club.core.service;
 
 import com.google.protobuf.ByteString;
+import com.the.good.club.core.assembler.UserAssembler;
 import com.the.good.club.core.connector.EmailConnector;
+import com.the.good.club.core.data.User;
+import com.the.good.club.core.spi.CorrelationRepository;
 import com.the.good.club.dataU.sdk.DataIdentificationGraphHelper;
 import com.the.good.club.dataU.sdk.ProxyUClient;
 import com.the.good.club.core.spi.UserRepository;
@@ -18,14 +21,17 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.protobuf.ByteString.copyFrom;
+import static com.the.good.club.core.data.UserStatus.PENDING_CORRELATION;
+import static com.the.good.club.core.data.UserStatus.PENDING_PERMISSION;
 import static com.the.good.club.dataU.sdk.ClientUtils.UUIDStringToByteString;
 
 @Service
-public class UserPermissionService {
-    private static final Logger log = LoggerFactory.getLogger(UserPermissionService.class);
+public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private static final String SUBJECT = "The good club registration";
 
@@ -34,25 +40,41 @@ public class UserPermissionService {
     private final EmailConnector emailConnector;
     private final ProxyUClient proxyUClient;
     private final UserRepository userRepository;
+    private final UserAssembler userAssembler;
+    private final CorrelationRepository correlationRepository;
 
-    public UserPermissionService(EmailConnector emailConnector, UserRepository userRepository,
-                                 @Lazy ProxyUClient proxyUClient) {
+    public UserService(EmailConnector emailConnector, UserRepository userRepository,
+                       @Lazy ProxyUClient proxyUClient, UserAssembler userAssembler, CorrelationRepository correlationRepository) {
         this.emailConnector = emailConnector;
         this.proxyUClient = proxyUClient;
         this.userRepository = userRepository;
+        this.userAssembler = userAssembler;
+        this.correlationRepository = correlationRepository;
     }
 
-    public void requestCorrelation(String email) {
+    public User requestCorrelationWithUser(String email) {
         String correlationMessage = proxyUClient.createCorrelationMessage();
         String correlationLink = getCorrelationLink(correlationMessage);
-        userRepository.save(email, correlationMessage);
+        User user = userAssembler.toUser(email, PENDING_CORRELATION);
+
+        correlationRepository.save(correlationMessage, user.getId());
+        userRepository.save(user);
         emailConnector.sendSimpleMessage(email, SUBJECT, correlationLink);
+        return user;
     }
 
     public void requestPermissions(String publicKey, String correlationId) throws NoSuchAlgorithmException, IOException {
-        String email = userRepository.getUserEmailByCorrelationId(correlationId);
+        Optional<User> userOptional = userRepository.getByCorrelationId(correlationId);
+        if (userOptional.isEmpty()) {
+            log.error("User for correlation id {} not found!", correlationId);
+            return;
+        }
+        User user = userOptional.get();
+        User pendingPermissionUser = userAssembler.updateUser(user, publicKey, PENDING_PERMISSION);
+        userRepository.save(pendingPermissionUser);
+
         String permissionRequestMessage = getPermissionRequestMessage(publicKey);
-        emailConnector.sendSimpleMessage(email, SUBJECT, permissionRequestMessage);
+        emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, permissionRequestMessage);
     }
 
     private String getPermissionRequestMessage(String publicKey) throws NoSuchAlgorithmException, IOException {
@@ -96,5 +118,9 @@ public class UserPermissionService {
 
     private String getCorrelationLink(String correlationMessage) {
         return DASHBOARDU_ENDPOINT + "?message=" + URLEncoder.encode(correlationMessage, StandardCharsets.UTF_8);
+    }
+
+    public Optional<User> getById(String id) {
+        return userRepository.getById(id);
     }
 }

@@ -1,26 +1,43 @@
 package com.the.good.club.web.rest;
 
-import com.the.good.club.core.service.UserPermissionService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import com.the.good.club.core.data.User;
+import com.the.good.club.core.service.UserService;
+import com.the.good.club.web.rest.assembler.UserResourceAssembler;
+import com.the.good.club.web.rest.resource.UserResource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 
 @RestController
 public class UsersController {
 
-    private final UserPermissionService userPermissionService;
+    private final UserService userService;
+    private final UserResourceAssembler userResourceAssembler;
 
-    public UsersController(UserPermissionService userPermissionService) {
-        this.userPermissionService = userPermissionService;
+    public UsersController(UserService userService, UserResourceAssembler userResourceAssembler) {
+        this.userService = userService;
+        this.userResourceAssembler = userResourceAssembler;
     }
 
     @PostMapping("/users")
-    public Map<String, String> registerUser(@RequestBody Map<String, String> body) {
+    public ResponseEntity<UserResource> registerUser(@RequestBody Map<String, String> body) {
         String email = body.getOrDefault("email", "bozhidar.g.grigorov@gmail.com");
-        userPermissionService.requestCorrelation(email);
+        User user = userService.requestCorrelationWithUser(email);
 
-        return body;
+        return new ResponseEntity<>(userResourceAssembler.toResource(user), OK);
     }
+
+    @GetMapping("users/{id}")
+    public ResponseEntity<UserResource> getUser(@PathVariable String id) {
+        Optional<User> user = userService.getById(id);
+
+        return user.map(u -> new ResponseEntity<>(userResourceAssembler.toResource(u), OK))
+        .orElseGet(() -> ResponseEntity.status(NOT_FOUND).build());
+    }
+
 }

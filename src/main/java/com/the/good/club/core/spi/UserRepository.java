@@ -1,7 +1,15 @@
 package com.the.good.club.core.spi;
 
-public interface UserRepository {
-    void save(String email, String correlationId);
+import com.the.good.club.core.data.User;
 
-    String getUserEmailByCorrelationId(String correlationId);
+import java.util.Optional;
+
+public interface UserRepository {
+    void save(User user);
+
+    Optional<User> getById(String id);
+
+    Optional<User> getByCorrelationId(String correlationId);
+
+    Optional<User> getByPublicKey(String publicKey);
 }
