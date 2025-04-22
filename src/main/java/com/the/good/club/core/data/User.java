@@ -10,6 +10,9 @@ public class User {
     private String id;
     private String email;
     private String publicKey;
+    private String correlationId;
+    private String permissionIds;
+    private String termsAndConditionsIds;
     private String status;
     private Date createdAt;
 }

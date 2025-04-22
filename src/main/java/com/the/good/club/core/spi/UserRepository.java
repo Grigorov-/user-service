@@ -11,5 +11,7 @@ public interface UserRepository {
 
     Optional<User> getByCorrelationId(String correlationId);
 
+    Optional<User> getByPermissionId(String permissionId);
+
     Optional<User> getByPublicKey(String publicKey);
 }

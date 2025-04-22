@@ -1,6 +1,7 @@
 package com.the.good.club.web.rest;
 
 import com.the.good.club.core.data.User;
+import com.the.good.club.core.data.UserStatus;
 import com.the.good.club.core.service.UserService;
 import com.the.good.club.web.rest.assembler.UserResourceAssembler;
 import com.the.good.club.web.rest.resource.UserResource;
@@ -25,9 +26,10 @@ public class UsersController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserResource> registerUser(@RequestBody Map<String, String> body) {
-        String email = body.getOrDefault("email", "bozhidar.g.grigorov@gmail.com");
-        User user = userService.requestCorrelationWithUser(email);
+    public ResponseEntity<UserResource> registerUser(@RequestBody UserResource request) {
+        User requestUser = userResourceAssembler.toUser(request, UserStatus.PENDING_CORRELATION);
+
+        User user = userService.requestCorrelationWithUser(requestUser);
 
         return new ResponseEntity<>(userResourceAssembler.toResource(user), OK);
     }

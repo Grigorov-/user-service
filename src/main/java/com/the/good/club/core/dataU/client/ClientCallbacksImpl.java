@@ -28,7 +28,12 @@ public class ClientCallbacksImpl implements ProxyUClientCallbacks {
 
     @Override
     public void onGrantedStatusReceived(boolean granted, String permissionMessage) {
-        logger.info("permissionMessage received: " + permissionMessage);
+        logger.info("PermissionMessage received: " + permissionMessage);
+        try {
+            userService.updatePermissionStatus(permissionMessage, granted);
+        } catch (Exception e) {
+            logger.error("Unable to updated granted status", e);
+        }
     }
 
     @Override

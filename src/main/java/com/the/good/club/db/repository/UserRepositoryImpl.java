@@ -26,11 +26,13 @@ public class UserRepositoryImpl implements UserRepository {
     private final Firestore firestore;
     private final UserEntityAssembler userEntityAssembler;
     private final CorrelationRepository correlationRepository;
+    private final PermissionsRepositoryImpl permissionsRepository;
 
-    public UserRepositoryImpl(Firestore firestore, UserEntityAssembler userEntityAssembler, CorrelationRepository correlationRepository) {
+    public UserRepositoryImpl(Firestore firestore, UserEntityAssembler userEntityAssembler, CorrelationRepository correlationRepository, PermissionsRepositoryImpl permissionsRepository) {
         this.firestore = firestore;
         this.userEntityAssembler = userEntityAssembler;
         this.correlationRepository = correlationRepository;
+        this.permissionsRepository = permissionsRepository;
     }
 
     public void save(User user) {
@@ -49,7 +51,17 @@ public class UserRepositoryImpl implements UserRepository {
             String userId = correlationRepository.getUserIdByCorrelationId(correlationId);
             return getById(userId);
         } catch (Exception e) {
-            throw new StoreException("Unable to retrieve user", e);
+            throw new StoreException("Unable to retrieve user by correlation id", e);
+        }
+    }
+
+    @Override
+    public Optional<User> getByPermissionId(String permissionId) {
+        try {
+            String userId = permissionsRepository.getUserIdByPermissionId(permissionId);
+            return getById(userId);
+        } catch (Exception e) {
+            throw new StoreException("Unable to retrieve user by permission id", e);
         }
     }
 

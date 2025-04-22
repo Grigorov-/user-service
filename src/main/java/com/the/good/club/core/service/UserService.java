@@ -5,9 +5,10 @@ import com.the.good.club.core.assembler.UserAssembler;
 import com.the.good.club.core.connector.EmailConnector;
 import com.the.good.club.core.data.User;
 import com.the.good.club.core.spi.CorrelationRepository;
+import com.the.good.club.core.spi.PermissionRepository;
+import com.the.good.club.core.spi.UserRepository;
 import com.the.good.club.dataU.sdk.DataIdentificationGraphHelper;
 import com.the.good.club.dataU.sdk.ProxyUClient;
-import com.the.good.club.core.spi.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
@@ -34,6 +35,8 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private static final String SUBJECT = "The good club registration";
+    public static final String DEFAULT_TERMS_AND_CONDITIONS_URL =
+        "https://storage.googleapis.com/terms-and-conditions-the-good-club-bucket/TERMS%20OF%20USE%20AND%20PRIVACY%20POLICY.html";
 
     private final String DASHBOARDU_ENDPOINT = "https://dev.datau.eu/#/decode";
 
@@ -42,24 +45,25 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserAssembler userAssembler;
     private final CorrelationRepository correlationRepository;
+    private final PermissionRepository permissionRepository;
 
     public UserService(EmailConnector emailConnector, UserRepository userRepository,
-                       @Lazy ProxyUClient proxyUClient, UserAssembler userAssembler, CorrelationRepository correlationRepository) {
+                       @Lazy ProxyUClient proxyUClient, UserAssembler userAssembler, CorrelationRepository correlationRepository, PermissionRepository permissionRepository) {
         this.emailConnector = emailConnector;
         this.proxyUClient = proxyUClient;
         this.userRepository = userRepository;
         this.userAssembler = userAssembler;
         this.correlationRepository = correlationRepository;
+        this.permissionRepository = permissionRepository;
     }
 
-    public User requestCorrelationWithUser(String email) {
+    public User requestCorrelationWithUser(User user) {
         String correlationMessage = proxyUClient.createCorrelationMessage();
         String correlationLink = getCorrelationLink(correlationMessage);
-        User user = userAssembler.toUser(email, PENDING_CORRELATION);
 
         correlationRepository.save(correlationMessage, user.getId());
         userRepository.save(user);
-        emailConnector.sendSimpleMessage(email, SUBJECT, correlationLink);
+        emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, correlationLink);
         return user;
     }
 
@@ -70,14 +74,42 @@ public class UserService {
             return;
         }
         User user = userOptional.get();
-        User pendingPermissionUser = userAssembler.updateUser(user, publicKey, PENDING_PERMISSION);
-        userRepository.save(pendingPermissionUser);
 
-        String permissionRequestMessage = getPermissionRequestMessage(publicKey);
-        emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, permissionRequestMessage);
+        String permissionId = requestPermission(publicKey, user);
+        User pendingPermissionUser = userAssembler.updateCorrelationData(user, publicKey, permissionId, correlationId, PENDING_PERMISSION);
+        permissionRepository.save(permissionId, user.getId());
+        userRepository.save(pendingPermissionUser);
     }
 
-    private String getPermissionRequestMessage(String publicKey) throws NoSuchAlgorithmException, IOException {
+    public void updatePermissionStatus(String permissionRequest, boolean isGranted) {
+        Optional<User> userOptional = userRepository.getByPermissionId(permissionRequest);
+        if (userOptional.isEmpty()) {
+            log.error("User for permissionRequest id {} not found!", permissionRequest);
+            return;
+        }
+
+        User user = userAssembler.updateUserData(userOptional.get(), isGranted);
+        userRepository.save(user);
+    }
+
+    private String requestPermission(String publicKey, User user) throws NoSuchAlgorithmException, IOException {
+        String permissionMessage = null;
+        try {
+            permissionMessage = getPermissionMessage(publicKey, user);
+            String permissionLink = getPermissionLink(permissionMessage);
+            emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, permissionLink);
+        } catch (Exception ex) {
+            log.error("Unable to get permission request", ex);
+        }
+        return permissionMessage;
+    }
+
+    private String getPermissionLink(String message) {
+        String encodedMessage = URLEncoder.encode(message, StandardCharsets.UTF_8);
+        return DASHBOARDU_ENDPOINT + "?message=" + encodedMessage;
+    }
+
+    private String getPermissionMessage(String publicKey, User user) throws NoSuchAlgorithmException, IOException {
         ByteString dataRightsSubject = getDataRightsSubject(publicKey);
 
         // use one of the fields names present in the data identification graph; see them in didgraph.yml from the SDK
@@ -88,29 +120,26 @@ public class UserService {
         // optional, send some random value
         ByteString reason = UUIDStringToByteString(UUID.randomUUID().toString());
 
-        ByteString policyHash = getTermsAndConditionsPolicyHash();
+        ByteString policyHash = getTermsAndConditionsPolicyHash(user.getTermsAndConditionsIds());
 
-        String permissionRequestMessage = proxyUClient.createPermissionRequestMessage(
+        return proxyUClient.createPermissionRequestMessage(
                 dataRightsSubject, data, individualProcess, reason, policyHash, 1605087413, 1893456000, 0, 1
         );
-
-        return DASHBOARDU_ENDPOINT + "?message=" + URLEncoder.encode(permissionRequestMessage, StandardCharsets.UTF_8);
     }
 
-    private static ByteString getTermsAndConditionsPolicyHash() throws NoSuchAlgorithmException, IOException {
+    private ByteString getTermsAndConditionsPolicyHash(String termsAndConditionsUrl) throws NoSuchAlgorithmException, IOException {
         // hash for the terms and conditions document
         // -b Displayed when read more button is clicked before the user give consent.
-        //TODO - add real terms and conditions
-        String fileUrl = "https://generator.lorem-ipsum.info/terms-and-conditions";
         MessageDigest messageDigest = MessageDigest.getInstance("SHA3-256");
 
         byte[] fileHash;
-        try(InputStream inputStream = new URL(fileUrl).openStream()) {
+        try (InputStream inputStream = new URL(termsAndConditionsUrl).openStream()) {
             fileHash = messageDigest.digest(inputStream.readAllBytes());
         }
 
         return copyFrom(fileHash);
     }
+
 
     private static ByteString getDataRightsSubject(String publicKey) {
         return copyFrom(Base64.getDecoder().decode(publicKey));

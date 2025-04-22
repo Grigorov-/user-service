@@ -6,14 +6,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
+@Builder(toBuilder = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserResource {
+public class TermsAndConditionsResource {
     private String id;
-    private String email;
-    private String termsAndConditionsUrl;
+    private String url;
     private String status;
-    private String createdAt;
 }

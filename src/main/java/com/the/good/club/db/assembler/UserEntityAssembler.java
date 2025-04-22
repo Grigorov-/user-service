@@ -15,7 +15,10 @@ public class UserEntityAssembler {
                 .email(user.getEmail())
                 .status(user.getStatus())
                 .publicKey(user.getPublicKey())
-                .createdAt(user.getCreatedAt() != null ? user.getCreatedAt() : Date.from(Instant.now()))
+                .correlationId(user.getCorrelationId())
+                .permissionIds(user.getPermissionIds())
+                .termsAndConditionIds(user.getTermsAndConditionsIds())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 
@@ -25,6 +28,9 @@ public class UserEntityAssembler {
                 .email(userEntity.getEmail())
                 .status(userEntity.getStatus())
                 .publicKey(userEntity.getPublicKey())
+                .correlationId(userEntity.getCorrelationId())
+                .permissionIds(userEntity.getPermissionIds())
+                .termsAndConditionsIds(userEntity.getTermsAndConditionIds())
                 .createdAt(userEntity.getCreatedAt())
                 .build();
     }

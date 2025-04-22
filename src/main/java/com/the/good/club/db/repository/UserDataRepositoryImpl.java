@@ -44,7 +44,7 @@ public class UserDataRepositoryImpl implements UserDataRepository {
         }
 
         try {
-            UserDataEntity userDataEntity = userDataAssembler.toEntity(dataId, process, mimeType, content);
+            UserDataEntity userDataEntity = userDataAssembler.toEntity(dataId, process, content, mimeType);
             getUserDataDocumentReference(dataId, userId)
                     .set(userDataEntity)
                     .get();

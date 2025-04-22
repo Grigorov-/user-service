@@ -24,6 +24,15 @@ public class UserEntity {
     @PropertyName("publicKey")
     private String publicKey;
 
+    @PropertyName("correlationId")
+    private String correlationId;
+
+    @PropertyName("permissionIds")
+    private String permissionIds;
+
+    @PropertyName("termsAndConditionIds")
+    private String termsAndConditionIds;
+
     @ServerTimestamp
     @PropertyName("createdAt")
     private Date createdAt;

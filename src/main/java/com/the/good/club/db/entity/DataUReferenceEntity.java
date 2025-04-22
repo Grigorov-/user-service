@@ -11,9 +11,9 @@ import java.util.Date;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CorrelationEntity {
+public class DataUReferenceEntity {
     @DocumentId
-    private String correlationId;
+    private String dataUId;
     private String userId;
 
     @ServerTimestamp
