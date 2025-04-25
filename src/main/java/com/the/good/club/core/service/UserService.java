@@ -32,6 +32,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.protobuf.ByteString.copyFrom;
+import static com.the.good.club.core.data.EmailTemplates.CORRELATION;
+import static com.the.good.club.core.data.EmailTemplates.PERMISSION;
 import static com.the.good.club.core.data.UserStatus.PENDING_PERMISSION;
 import static com.the.good.club.dataU.sdk.ClientUtils.UUIDStringToByteString;
 
@@ -39,7 +41,6 @@ import static com.the.good.club.dataU.sdk.ClientUtils.UUIDStringToByteString;
 public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
-    private static final String SUBJECT = "The good club registration";
     public static final String DEFAULT_TERMS_AND_CONDITIONS_URL =
         "https://storage.googleapis.com/terms-and-conditions-the-good-club-bucket/TERMS%20OF%20USE%20AND%20PRIVACY%20POLICY.v.0.1.0.html";
     public static final Duration DEFAULT_PERIOD = Duration.ofDays(7);
@@ -69,7 +70,8 @@ public class UserService {
 
         correlationRepository.save(correlationMessage, user.getId());
         userRepository.save(user);
-        emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, correlationLink);
+        emailConnector.sendSimpleMessage(user.getEmail(), CORRELATION.getSubject(),
+                CORRELATION.formattedBody(correlationLink));
         return user;
     }
 
@@ -103,7 +105,7 @@ public class UserService {
         try {
             permissionMessage = getPermissionMessage(publicKey, user);
             String permissionLink = getPermissionLink(permissionMessage);
-            emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, permissionLink);
+            emailConnector.sendSimpleMessage(user.getEmail(), PERMISSION.getSubject(), PERMISSION.formattedBody(permissionLink));
         } catch (Exception ex) {
             log.error("Unable to get permission request", ex);
             throw new ProcessingException("Unable to request permission from user: ", ex);
