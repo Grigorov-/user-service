@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import static com.the.good.club.dataU.sdk.ClientUtils.byteStringToUUIDString;
+import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.getNodeName;
 import static java.util.Base64.getEncoder;
 
 @Component
@@ -29,7 +30,7 @@ public class ProxyUStorage implements ProxyUClientStorage {
     @Override
     public void saveOrUpdateUserData(ByteString subjectPublicKey, ByteString dataUUID, ByteString process, String mime, ByteString dataValue) {
         userDataRepository.save(encodePublicKey(subjectPublicKey), byteStringToUUIDString(dataUUID),
-                byteStringToUUIDString(process), mime, dataValue.toStringUtf8());
+                getNodeName(dataUUID), byteStringToUUIDString(process), mime, dataValue.toStringUtf8());
     }
 
     @Override

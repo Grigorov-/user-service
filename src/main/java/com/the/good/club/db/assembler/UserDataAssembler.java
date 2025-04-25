@@ -8,9 +8,10 @@ import java.util.Date;
 
 @Component
 public class UserDataAssembler {
-    public UserDataEntity toEntity(String id, String process, String content, String mimeType) {
+    public UserDataEntity toEntity(String id, String field, String process, String content, String mimeType) {
         return UserDataEntity.builder()
                 .dataId(id)
+                .field(field)
                 .process(process)
                 .content(content)
                 .mimeType(mimeType)

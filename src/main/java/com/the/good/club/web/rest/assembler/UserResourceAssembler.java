@@ -21,6 +21,7 @@ public class UserResourceAssembler {
                 .id(user.getId())
                 .email(user.getEmail())
                 .status(user.getStatus())
+                .company(user.getCompany())
                 .createdAt(getCreatedAtFormatted(user.getCreatedAt()))
                 .build();
     }
@@ -28,6 +29,7 @@ public class UserResourceAssembler {
     public User toUser(UserResource userResource, UserStatus status) {
         return User.builder()
                 .id(UUID.randomUUID().toString())
+                .company(userResource.getCompany())
                 .status(status.name())
                 .createdAt(Date.from(Instant.now()))
                 .email(userResource.getEmail())

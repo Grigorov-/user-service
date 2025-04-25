@@ -13,6 +13,7 @@ import lombok.Getter;
 public class UserResource {
     private String id;
     private String email;
+    private String company;
     private String termsAndConditionsUrl;
     private String status;
     private String createdAt;

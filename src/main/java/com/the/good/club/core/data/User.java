@@ -9,6 +9,7 @@ import java.util.Date;
 public class User {
     private String id;
     private String email;
+    private String company;
     private String publicKey;
     private String correlationId;
     private String permissionIds;

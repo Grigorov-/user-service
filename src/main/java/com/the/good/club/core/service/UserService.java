@@ -6,6 +6,7 @@ import com.the.good.club.core.connector.EmailConnector;
 import com.the.good.club.core.data.User;
 import com.the.good.club.core.spi.CorrelationRepository;
 import com.the.good.club.core.spi.PermissionRepository;
+import com.the.good.club.core.spi.ProcessingException;
 import com.the.good.club.core.spi.UserRepository;
 import com.the.good.club.dataU.sdk.DataIdentificationGraphHelper;
 import com.the.good.club.dataU.sdk.ProxyUClient;
@@ -21,12 +22,16 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.protobuf.ByteString.copyFrom;
-import static com.the.good.club.core.data.UserStatus.PENDING_CORRELATION;
 import static com.the.good.club.core.data.UserStatus.PENDING_PERMISSION;
 import static com.the.good.club.dataU.sdk.ClientUtils.UUIDStringToByteString;
 
@@ -36,7 +41,8 @@ public class UserService {
 
     private static final String SUBJECT = "The good club registration";
     public static final String DEFAULT_TERMS_AND_CONDITIONS_URL =
-        "https://storage.googleapis.com/terms-and-conditions-the-good-club-bucket/TERMS%20OF%20USE%20AND%20PRIVACY%20POLICY.html";
+        "https://storage.googleapis.com/terms-and-conditions-the-good-club-bucket/TERMS%20OF%20USE%20AND%20PRIVACY%20POLICY.v.0.1.0.html";
+    public static final Duration DEFAULT_PERIOD = Duration.ofDays(7);
 
     private final String DASHBOARDU_ENDPOINT = "https://dev.datau.eu/#/decode";
 
@@ -100,6 +106,7 @@ public class UserService {
             emailConnector.sendSimpleMessage(user.getEmail(), SUBJECT, permissionLink);
         } catch (Exception ex) {
             log.error("Unable to get permission request", ex);
+            throw new ProcessingException("Unable to request permission from user: ", ex);
         }
         return permissionMessage;
     }
@@ -128,7 +135,6 @@ public class UserService {
     }
 
     private ByteString getTermsAndConditionsPolicyHash(String termsAndConditionsUrl) throws NoSuchAlgorithmException, IOException {
-        // hash for the terms and conditions document
         // -b Displayed when read more button is clicked before the user give consent.
         MessageDigest messageDigest = MessageDigest.getInstance("SHA3-256");
 
@@ -152,4 +158,25 @@ public class UserService {
     public Optional<User> getById(String id) {
         return userRepository.getById(id);
     }
+
+    public List<User> getUsersByFilters(String status, String company, String startDateStr, String endDateStr) {
+
+        // Parse or fallback dates
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
+
+        Instant now = Instant.now();
+        Instant defaultStart = now.minus(DEFAULT_PERIOD);
+
+        Instant start = (startDateStr != null && !startDateStr.isBlank())
+                ? Instant.from(formatter.parse(startDateStr))
+                : defaultStart;
+
+        Instant end = (endDateStr != null && !endDateStr.isBlank())
+                ? Instant.from(formatter.parse(endDateStr))
+                : now;
+
+        return userRepository.getUserByFilters(status, company, Date.from(start), Date.from(end));
+    }
+
+
 }

@@ -14,6 +14,7 @@ import java.util.Date;
 public class UserDataEntity {
     @DocumentId
     private String dataId;
+    private String field;
     private String process;
     private String content;
     private String mimeType;

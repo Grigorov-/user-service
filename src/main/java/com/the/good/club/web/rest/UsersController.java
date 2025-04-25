@@ -8,6 +8,7 @@ import com.the.good.club.web.rest.resource.UserResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +41,16 @@ public class UsersController {
 
         return user.map(u -> new ResponseEntity<>(userResourceAssembler.toResource(u), OK))
         .orElseGet(() -> ResponseEntity.status(NOT_FOUND).build());
+    }
+
+    @GetMapping("users")
+    public ResponseEntity<List<UserResource>> getUsers(@RequestParam String status,
+                                                       @RequestParam String company,
+                                                       @RequestParam(required = false) String startDate,
+                                                       @RequestParam(required = false) String endDate) {
+        List<User> users = userService.getUsersByFilters(status, company, startDate, endDate);
+
+        return new ResponseEntity<>(users.stream().map(userResourceAssembler::toResource).toList(), OK);
     }
 
 }

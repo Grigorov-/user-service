@@ -434,7 +434,9 @@ public class ProxyUClient {
                 extractUserDataForNode(dataIdentificationGraphNode.getKey(), publicKey, process, dataFields);
             } else {
                 UserData childData = proxyUClientStorage.extractUserData(publicKey, childUUID, process);
-
+                if (childData == null) {
+                    continue;
+                }
                 info(
                     "Extracted user data: UUID: {0}, Mime: {1}, value: {2}",
                         childUUIDString, childData.getMimeType(), childData.getValue()

@@ -18,6 +18,9 @@ public class UserEntity {
     @PropertyName("email")
     private String email;
 
+    @PropertyName("company")
+    private String company;
+
     @PropertyName("status")
     private String status;
 

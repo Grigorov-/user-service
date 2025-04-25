@@ -10,7 +10,6 @@ import com.the.good.club.core.spi.UserRepository;
 import com.the.good.club.dataU.sdk.UserData;
 import com.the.good.club.db.assembler.UserDataAssembler;
 import com.the.good.club.db.entity.UserDataEntity;
-import com.the.good.club.db.entity.UserEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -37,14 +36,14 @@ public class UserDataRepositoryImpl implements UserDataRepository {
 
 
     @Override
-    public void save(String userPublicKey, String dataId, String process, String mimeType, String content) {
+    public void save(String userPublicKey, String dataId, String dataFieldName, String process, String mimeType, String content) {
         String userId = getUserIdByPublicKey(userPublicKey);
         if (userId == null) {
             return;
         }
 
         try {
-            UserDataEntity userDataEntity = userDataAssembler.toEntity(dataId, process, content, mimeType);
+            UserDataEntity userDataEntity = userDataAssembler.toEntity(dataId, dataFieldName, process, content, mimeType);
             getUserDataDocumentReference(dataId, userId)
                     .set(userDataEntity)
                     .get();
