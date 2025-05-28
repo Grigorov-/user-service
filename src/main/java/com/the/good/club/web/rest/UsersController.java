@@ -9,13 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 
 @RestController
+@RequestMapping("/users")
 public class UsersController {
 
     private final UserService userService;
@@ -26,7 +26,7 @@ public class UsersController {
         this.userResourceAssembler = userResourceAssembler;
     }
 
-    @PostMapping("/users")
+    @PostMapping
     public ResponseEntity<UserResource> registerUser(@RequestBody UserResource request) {
         User requestUser = userResourceAssembler.toUser(request, UserStatus.PENDING_CORRELATION);
 
@@ -35,7 +35,7 @@ public class UsersController {
         return new ResponseEntity<>(userResourceAssembler.toResource(user), OK);
     }
 
-    @GetMapping("users/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<UserResource> getUser(@PathVariable String id) {
         Optional<User> user = userService.getById(id);
 
@@ -43,7 +43,7 @@ public class UsersController {
         .orElseGet(() -> ResponseEntity.status(NOT_FOUND).build());
     }
 
-    @GetMapping("users")
+    @GetMapping
     public ResponseEntity<List<UserResource>> getUsers(@RequestParam String status,
                                                        @RequestParam String company,
                                                        @RequestParam(required = false) String startDate,

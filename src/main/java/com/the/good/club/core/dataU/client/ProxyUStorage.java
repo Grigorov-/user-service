@@ -2,19 +2,29 @@ package com.the.good.club.core.dataU.client;
 
 import com.google.protobuf.ByteString;
 import com.the.good.club.core.spi.UserDataRepository;
+import com.the.good.club.dataU.sdk.DataIdentificationGraphNode;
 import com.the.good.club.dataU.sdk.ProxyUClientStorage;
 import com.the.good.club.dataU.sdk.UserData;
+import com.the.good.club.dataU.sdk.protocol.DataField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
+import static com.the.good.club.dataU.sdk.ClientUtils.UUIDStringToByteString;
 import static com.the.good.club.dataU.sdk.ClientUtils.byteStringToUUIDString;
+import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.dataIdentificationGraph;
+import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.getChildrenUUIDs;
 import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.getNodeName;
+import static com.the.good.club.dataU.sdk.ProxyUClient.APPLICATION_NODE_MIME_TYPE;
 import static java.util.Base64.getEncoder;
 
 @Component
 public class ProxyUStorage implements ProxyUClientStorage {
     private static final Logger logger = LoggerFactory.getLogger(ProxyUStorage.class);
+    private static final String APPLICATION_NODE_MIME_TYPE = "application/datau+node";
+
 
     private final UserDataRepository userDataRepository;
 
@@ -41,10 +51,28 @@ public class ProxyUStorage implements ProxyUClientStorage {
     @Override
     public void deleteData(ByteString userPublicKey, ByteString dataUUID, ByteString process) {
         //TODO how process should be handled here
-        userDataRepository.delete(encodePublicKey(userPublicKey), byteStringToUUIDString(dataUUID));
+        deleteData(userPublicKey, byteStringToUUIDString(dataUUID));
     }
 
     private String encodePublicKey(ByteString publicKey) {
         return getEncoder().encodeToString(publicKey.toByteArray());
+    }
+
+    private void deleteData(ByteString userPublicKey, String dataUUIDString) {
+        DataIdentificationGraphNode node = dataIdentificationGraph.get(dataUUIDString);
+        if (node == null) return;
+
+        if (APPLICATION_NODE_MIME_TYPE.equals(node.getMimeType())) {
+            List<ByteString> childrenUUIDs = getChildrenUUIDs(UUIDStringToByteString(dataUUIDString));
+            for (ByteString childUUID : childrenUUIDs) {
+                String childUUIDString = byteStringToUUIDString(childUUID);
+                DataIdentificationGraphNode childNode = dataIdentificationGraph.get(childUUIDString);
+                if (childNode != null) {
+                    deleteData(userPublicKey, childNode.getKey());
+                }
+            }
+        } else {
+            userDataRepository.delete(encodePublicKey(userPublicKey), dataUUIDString);
+        }
     }
 }

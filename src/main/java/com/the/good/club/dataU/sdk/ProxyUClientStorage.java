@@ -39,7 +39,7 @@ public interface ProxyUClientStorage {
     }
 
     /**
-     * Method used to store or update individual data for a data subject
+     * Method used to store or update individual data fields for a data subject
      * @param subject public key of the subject that shared the data
      * @param dataUUID uuid of the data field to store
      * @param process uuid of the process; for one of BULK | INDIVIDUAL
@@ -52,7 +52,7 @@ public interface ProxyUClientStorage {
 
 
     /**
-     * Method used to read data from DB for the INDIVIDUAL flow
+     * Method used to read data from your DB
      * @param subject public key of the subject that shared the data
      * @param dataUUID uuid of the data field to retrieve
      * @param process uuid of the process; for one of BULK | INDIVIDUAL
@@ -61,7 +61,7 @@ public interface ProxyUClientStorage {
 
 
     /**
-     * Method used to delete data from DB for the INDIVIDUAL flow
+     * Method used to delete data from your DB
      * @param subject public key of the subject that shared the data
      * @param dataUUID uuid of the data field to delete
      * @param process uuid of the process; for one of BULK | INDIVIDUAL

@@ -7,7 +7,12 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -16,7 +21,7 @@ import static com.the.good.club.dataU.sdk.ClientUtils.byteStringToUUID;
 
 public class DataIdentificationGraphHelper {
     private static final Logger logger = Logger.getLogger(DataIdentificationGraphHelper.class.getName());
-    static Map<String, DataIdentificationGraphNode> dataIdentificationGraph = new HashMap<>();
+    public static Map<String, DataIdentificationGraphNode> dataIdentificationGraph = new HashMap<>();
     static Map<String, ByteString> localizedDataIdentificationGraph = new HashMap<>();
     public static final String BULK_PROCESS = "BULK";
     public static final String USER_ID = "user_id";

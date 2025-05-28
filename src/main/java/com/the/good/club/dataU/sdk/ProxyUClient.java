@@ -1,6 +1,8 @@
 package com.the.good.club.dataU.sdk;
 
 import com.google.protobuf.ByteString;
+import com.the.good.club.dataU.sdk.protocol.ProxyUIntegrationGrpc;
+
 import com.the.good.club.dataU.sdk.protocol.*;
 import io.grpc.Channel;
 import io.grpc.Status;
@@ -18,6 +20,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -25,7 +28,6 @@ import java.util.stream.Collectors;
 import static com.the.good.club.dataU.sdk.ClientUtils.*;
 import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.*;
 import static java.util.Base64.getEncoder;
-
 
 @Service
 public class ProxyUClient {
@@ -43,18 +45,19 @@ public class ProxyUClient {
 
     private final ProxyUClientCallbacks proxyUClientCallbacks;
 
-    private final BlockingQueue<DataRequest> dataRequests;
+    private final BlockingQueue<com.the.good.club.dataU.sdk.protocol.DataRequest> dataRequests;
 
-    @Value("${proxyU.dataIdGraph:didgraph.yml}")
+    @Value("${dataIdGraph:didgraph.yml}")
     private String dataIdentificationGraphFileName;
 
-    @Value("${proxyU.localizedDataIdGraph:en.yml}")
+    @Value("${localizedDataIdGraph:en.yml}")
     private String localizedDataIdentificationGraphFileName;
 
     /**
      * Construct client for accessing ProxyU server using the existing channel
-     * @param channel - ssl channel built by proxyUChannel bean factory
-     * @param proxyUClientStorage - interface for storing user data
+     * @param channel ssl channel built by proxyUChannel bean factory
+     * @param proxyUClientStorage interface for storing user data
+     * @param proxyUClientCallbacks interface for handling responses
      */
     public ProxyUClient(
             Channel channel,
@@ -78,6 +81,7 @@ public class ProxyUClient {
      * Async server-streaming.
      * Calls correlation RPC to obtain the correlation message for a data subject.
      * Use this correlation message to receive data subject's public key.
+     * @return the correlation message for a data subject
      */
     public String createCorrelationMessage() {
         info("*** Correlation");
@@ -122,7 +126,9 @@ public class ProxyUClient {
         };
 
         try {
-            proxyUIntegrationAsyncStub.correlation(correlationRequest, responseObserver);
+            proxyUIntegrationAsyncStub
+                .withDeadlineAfter(72, TimeUnit.HOURS)
+                .correlation(correlationRequest, responseObserver);
         } catch (RuntimeException e) {
             warning("Correlation RPC failed: {0}", e.getMessage());
         }
@@ -144,15 +150,16 @@ public class ProxyUClient {
      * Async server streaming. Calls permission RPC. Used to obtain the permission message which needs to be sent to the
      * data subject in oder to obtain their consent for sharing the group of data referenced by data UUID sent as param;
      * the status of the permission request is available on the onGrantedStatusReceived callback
-     * @param publicKey - data subject public key
-     * @param data - UUID of the data requested - the parent of a group of data for which the permission is requested
-     * @param process - UUID of the process
-     * @param reason - UUID of the reason
-     * @param policy - SHA3-256 hash bytes of the previously published legal policy
-     * @param from - Unix UTC timestamp from when this permission is valid
-     * @param until - Unix UTC timestamp until when this permission is valid
-     * @param amount - how often this data will be retrieved, 0 sets no limit
-     * @param level - the lowest level of data subject identification required
+     * @param publicKey data subject public key
+     * @param data UUID of the data requested - the parent of a group of data for which the permission is requested
+     * @param process UUID of the process
+     * @param reason UUID of the reason
+     * @param policy SHA3-256 hash bytes of the previously published legal policy
+     * @param from Unix UTC timestamp from when this permission is valid
+     * @param until Unix UTC timestamp until when this permission is valid
+     * @param amount how often this data will be retrieved, 0 sets no limit
+     * @param level the lowest level of data subject identification required
+     * @return the permission request message for a data subject
      */
     public String createPermissionRequestMessage(
             ByteString publicKey, ByteString data, ByteString process, ByteString reason, ByteString policy,
@@ -208,7 +215,9 @@ public class ProxyUClient {
         };
 
         try {
-            proxyUIntegrationAsyncStub.permission(permissionRequest, responseObserver);
+            proxyUIntegrationAsyncStub
+                .withDeadlineAfter(72, TimeUnit.HOURS)
+                .permission(permissionRequest, responseObserver);
         } catch (RuntimeException e) {
             warning("Permission RPC failed: {0}", e.getMessage());
         }
@@ -225,11 +234,10 @@ public class ProxyUClient {
         return "";
     }
 
-
     /**
-     * Blocking unary call. Calls submitDocument RPC for submitting a terms & conditions document
-     * @param legalPolicyDocument - contains URL and hash of the terms & conditions document
-     * @return status of the submission: SUCCESS | FAILED
+     * Blocking unary call. Calls submitDocument RPC for submitting a terms &amp; conditions document
+     * @param legalPolicyDocument contains URL and SHA3-256 File Hash in Hex format of the terms &amp; conditions document
+     * @return status of the submission: SUCCESS &vert; FAILED
      */
     public String submitDocument(LegalPolicyDocument legalPolicyDocument) {
 
@@ -261,13 +269,12 @@ public class ProxyUClient {
      * Bidirectional RPC streaming call. Calls data RPC and handles all possible responses (DataResponse.ResponseCase)
      */
      void processRequests() {
-        info("*** Process Data");
+         info("*** Started RPC Data streaming with ProxyU server");
+         AtomicReference<StreamObserver<DataRequest>> requestObserverRef = new AtomicReference<>();
 
-        StreamObserver<DataResponse> responseObserver = new StreamObserver<>() {
+         StreamObserver<DataResponse> responseObserver = new StreamObserver<>() {
             @Override
             public void onNext(DataResponse dataResponse) {
-                StreamObserver<DataRequest> requestObserver = proxyUIntegrationAsyncStub.data(this);
-
                 switch (dataResponse.getResponseCase()) {
                     case RETRIEVE_RESPONSE -> {
                         DataRetrieveResponse dataRetrieveResponse = dataResponse.getRetrieveResponse();
@@ -282,7 +289,7 @@ public class ProxyUClient {
                                 .collect(Collectors.joining(","));
 
                         UUID requestedDataUUID = byteStringToUUID(dataRetrieveResponse.getData());
-                        info("Retrieved data: {0} {1}", requestedDataUUID, values);
+                        info("Received RetrieveResponse: Data received {0} {1}", requestedDataUUID, values);
                         proxyUClientCallbacks.onDataRetrieveResponseReceived(dataRetrieveResponse);
                     }
                     case RETRIEVE_REQUEST -> {
@@ -293,7 +300,7 @@ public class ProxyUClient {
                         String dataUUIDString = byteStringToUUIDString(dataUUID);
                         DataIdentificationGraphNode graphNode = dataIdentificationGraph.get(dataUUIDString);
 
-                        info("[RetrieveRequest] Extracting user data for node {0}", dataUUIDString);
+                        info("Received RetrieveRequest: Extracting user data for node {0}", dataUUIDString);
 
                         List<DataField> dataFields = new ArrayList<>();
 
@@ -302,6 +309,13 @@ public class ProxyUClient {
                             extractUserDataForNode(dataUUIDString, subjectPublicKey, process, dataFields);
                         } else {
                             UserData userData = proxyUClientStorage.extractUserData(subjectPublicKey, dataUUID, process);
+                            DataField dataField = DataField.newBuilder()
+                                    .setMime(userData.getMimeType())
+                                    .setUuid(dataUUID)
+                                    .setValue(ByteString.copyFromUtf8(userData.getValue()))
+                                    .build();
+                            dataFields.add(dataField);
+
                             info("Extracted user data for node {0}: Mime: {1} value: {2}",
                                     dataUUIDString, userData.getMimeType(), userData.getValue()
                             );
@@ -319,7 +333,7 @@ public class ProxyUClient {
                                 .setRetrieveResponse(retrieveResponse)
                                 .build();
 
-                        requestObserver.onNext(dataRequest);
+                        requestObserverRef.get().onNext(dataRequest);
                     }
                     case SUPPLY_REQUEST -> {
                         ByteString publicKey = ByteString.copyFrom(dataResponse.getSupplyRequest().getPublicKey().toByteArray());
@@ -338,7 +352,7 @@ public class ProxyUClient {
                         } else {
                             // save user data only for NON application/datau+node type nodes
                             if(!APPLICATION_NODE_MIME_TYPE.equals(dataResponse.getSupplyRequest().getMime())) {
-                                info("[SupplyRequest] Received user data: UUID: {0}, Mime: {1}, value: {2}",
+                                info("Received SupplyRequest: Saving user data UUID: {0}, Mime: {1}, value: {2}",
                                         byteStringToUUIDString(dataUUID),
                                         dataResponse.getSupplyRequest().getMime(),
                                         dataResponse.getSupplyRequest().getValue()
@@ -358,10 +372,11 @@ public class ProxyUClient {
                         ByteString dataUUID = ByteString.copyFrom(dataResponse.getDeleteRequest().getData().toByteArray());
                         ByteString process = ByteString.copyFrom(dataResponse.getDeleteRequest().getProcess().toByteArray());
 
-                        info("Deleting user data {0} for subject {1}!",
+                        info("Received DeleteRequest: Deleting user data {0} for subject {1}",
                                 byteStringToUUID(dataUUID),
-                                byteStringToUUID(publicKey)
+                                getEncoder().encodeToString(publicKey.toByteArray())
                         );
+
                         proxyUClientStorage.deleteData(publicKey, dataUUID, process);
 
                         DataDeleteResponse deleteResponse = DataDeleteResponse.newBuilder()
@@ -374,14 +389,14 @@ public class ProxyUClient {
                                 .setDeleteResponse(deleteResponse)
                                 .build();
 
-                        requestObserver.onNext(dataRequest);
+                        requestObserverRef.get().onNext(dataRequest);
                     }
                 }
             }
 
             @Override
             public void onError(Throwable throwable) {
-                warning("RetrieveData Failed: {0}", Status.fromThrowable(throwable));
+                warning("Failed receiving response from ProxyU server: {0}", Status.fromThrowable(throwable));
             }
 
             @Override
@@ -391,6 +406,7 @@ public class ProxyUClient {
         };
 
         StreamObserver<DataRequest> requestObserver = proxyUIntegrationAsyncStub.data(responseObserver);
+        requestObserverRef.set(requestObserver);
 
         // listen for and send requests
         while (true) {
@@ -434,9 +450,7 @@ public class ProxyUClient {
                 extractUserDataForNode(dataIdentificationGraphNode.getKey(), publicKey, process, dataFields);
             } else {
                 UserData childData = proxyUClientStorage.extractUserData(publicKey, childUUID, process);
-                if (childData == null) {
-                    continue;
-                }
+
                 info(
                     "Extracted user data: UUID: {0}, Mime: {1}, value: {2}",
                         childUUIDString, childData.getMimeType(), childData.getValue()

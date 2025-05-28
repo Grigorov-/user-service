@@ -1,3 +1,10 @@
+########################################################################################################################
+### IMPORTANT!! All the keys must be defined in the order of the usage, for example if a parent node uses a child node,
+### that child node must be defined BEFORE the parent node because the nodes are populated in the blockchain didgraph in
+### the same order. So, if a parent is defined before all of its children are defined, an error will be given during the
+### didgraph update job (didgraph-job.yaml). This also applies to parent nodes that are used as children for other nodes
+### IMPORTANT!! The description of each node is limited to 128 characters.
+########################################################################################################################
 didgraph:
   ############################### Child Nodes ################################
   - key: ab493ade-2f3f-11eb-a11b-23fff9ac0d99
@@ -60,83 +67,116 @@ didgraph:
     mime: text/plain; charset=UTF-8
     description: Language
 
-  - key: 636d5202-c142-4ce7-94f5-0658af6f3f66
-    mime: text/plain; charset=UTF-8
-    description: Food List
-
-  - key: 3fd4edde-739d-4a49-b555-120af6438990
-    mime: text/plain; charset=UTF-8
-    description: Energy Level Before
-
-  - key: a43cebbe-d026-4ba3-ab59-9d8c2c2f733a
-    mime: text/plain; charset=UTF-8
-    description: Energy Level After
-
   - key: b1ef90f5-e75f-4300-aba0-b0c69ef81c89
     mime: text/plain; charset=UTF-8
     description: What is your personal activity level? (Sedentary/Lightly active/Moderately active/Very active/Extra active)
 
-  # Food Market Map Permission Data
+  - key: c7d8e90e-5ea3-4629-bc4d-8e5bfc1b8b4c
+    mime: text/plain; charset=UTF-8
+    description: 'Gender (write one of the following: Male / Female / Prefer not to say)'
+
+  - key: 41d15c58-af64-4544-ac2a-93bc69cb98b2
+    mime: text/plain; charset=UTF-8
+    description: 'Age (years - only write the number, for example: 32)'
+
+  - key: a46f3fa9-0123-458f-9b47-0e366f037c16
+    mime: text/plain; charset=UTF-8
+    description: 'Height (cm - only write the number, for example: 186)'
+
+  - key: 0c6aad7b-808b-4bd8-9e6d-1b08b026e48c
+    mime: text/plain; charset=UTF-8
+    description: 'Weight (kg - only write the number, for example: 75)'
+
+  - key: d7e3199d-ce8b-4f10-bc63-166295fff99b
+    mime: text/plain; charset=UTF-8
+    description: 'How many days per week do you exercise or play sports? (Digit a number from 0 to 7, write 0 if You Do Not exercise)'
+
+  - key: 024de1e2-515e-4b5e-ac2d-5b0e0e67d6c7
+    mime: text/plain; charset=UTF-8
+    description: 'What’s your physical activity level? Type "low" (walk, yoga), "high" (run, football), or "NO" if you don’t exercise.'
+
+  - key: 7d469b35-1bdd-4fa9-8d8b-5789549b9959
+    mime: text/plain; charset=UTF-8
+    description: 'What best describes your typical workday? (write "desk work" or "manual work")'
+
+  - key: 4bbb7c73-e90c-41e0-b635-05e646a021c9
+    mime: text/plain; charset=UTF-8
+    description: 'What type of diet do you follow? Write "omnivore" "vegetarian" or "vegan"'
+
+  - key: 1bddbf2e-7937-4bab-b1f4-2f0b6d4aafe5
+    mime: text/plain; charset=UTF-8
+    description: 'Write "Yes" to give consent to the REDUCE team to collect data from your scanned trays'
+
+  - key: f000aeb9-1b91-41c2-870a-3dcaf6761388
+    mime: text/plain; charset=UTF-8
+    description: 'Write "Yes" to give consent to the REDUCE team to collect data from your questionnaires.'
+
+  # Food Market Map Pilot Permission Data
   - key: b89e65f4-51a4-4ef3-8f61-31d1ffefb137
     mime: text/plain; charset=UTF-8
     description: User Receipt Acceptance Number
 
   ############################### Parent Nodes ###############################
-  # FoodInformation1
-  - key: f7278b37-a21b-484b-8342-7f676b0fcca4
-    mime: application/datau+node
-    description: Food Information
-    children:
-      - 06667553-747e-4d2b-8603-b3f8ad0d8bb0
-      - 0f95f91f-6460-4b9f-86f4-3226a30b6c3c
-      - 99952cd6-c296-4466-9fe0-dbba27a47b9b
-      - 636d5202-c142-4ce7-94f5-0658af6f3f66
-      - 3fd4edde-739d-4a49-b555-120af6438990
-      - a43cebbe-d026-4ba3-ab59-9d8c2c2f733a
-  # Personal Information Extended
-  - key: 3ac87316-561c-43cf-af09-48a9726fd1b5
-    mime: application/datau+node
-    description: Personal Information Extended
-    children:
-      - 4b3ac6d6-5ed2-4c29-90cb-29bc933ac78f
-      - 0ee84dd4-90fe-4491-9943-733137753bed
-      - 786d5539-b938-431c-941b-b1b38287d7d4
-      - 34b672ca-8b8e-4d40-95c6-a63fb9ac547a
-      - 06667553-747e-4d2b-8603-b3f8ad0d8bb0
-      - ce0bd6d8-b3c0-4144-8c6c-eb3b6bac040c
   # Personal Information
-  - key: ee6b00c5-ac84-4aa1-934f-3b70d672cd7e
+  - key: 3ac87316-561c-43cf-af09-48a9726fd1b5
     mime: application/datau+node
     description: Personal Information
     children:
-      - 4b3ac6d6-5ed2-4c29-90cb-29bc933ac78f
-      - 0ee84dd4-90fe-4491-9943-733137753bed
+      - 4b3ac6d6-5ed2-4c29-90cb-29bc933ac78f # Name
+      - 0ee84dd4-90fe-4491-9943-733137753bed # Email
+      - 786d5539-b938-431c-941b-b1b38287d7d4 # Gender
+      - 34b672ca-8b8e-4d40-95c6-a63fb9ac547a # Age
+      - 06667553-747e-4d2b-8603-b3f8ad0d8bb0 # Weight
+      - ce0bd6d8-b3c0-4144-8c6c-eb3b6bac040c # Height
   # Name
   - key: 4b3ac6d6-5ed2-4c29-90cb-29bc933ac78f
     mime: application/datau+node
     description: Name
     children:
-      - ab493ade-2f3f-11eb-a11b-23fff9ac0d99
-      - fe06b45e-2f3f-11eb-8728-53ed1b3e7429
-  # Kitchen Adventure Permission Data
+      - ab493ade-2f3f-11eb-a11b-23fff9ac0d99 # First Name
+      - fe06b45e-2f3f-11eb-8728-53ed1b3e7429 # Last Name
+  # Name & Email
+  - key: ee6b00c5-ac84-4aa1-934f-3b70d672cd7e
+    mime: application/datau+node
+    description: Name & Email
+    children:
+      - 4b3ac6d6-5ed2-4c29-90cb-29bc933ac78f # Name
+      - 0ee84dd4-90fe-4491-9943-733137753bed # Email
+  # Kitchen Adventure Pilot Permission Data
   - key: 93599e61-bdf4-489a-95d6-da028d5daf3c
     mime: application/datau+node
-    description: Kitchen Adventure Permission Data
+    description: Personal Information
     children:
-      - 7f8614d7-f04e-4c9b-b0e7-ee0b6019dd30
-      - b65f6315-62bf-4d33-8daf-411d7ba611c3
-      - b25d8287-7452-41af-8b09-1cdac366bf4e
-      - 3b612607-cc05-4716-8804-e00f7cec2be2
-      - 07923e1b-32a3-4e38-9f55-c64370ccc413
-      - 97caeaf3-859f-45b5-968d-81affe58deb8
-      - b1ef90f5-e75f-4300-aba0-b0c69ef81c89
+      - 7f8614d7-f04e-4c9b-b0e7-ee0b6019dd30 # Country
+      - b65f6315-62bf-4d33-8daf-411d7ba611c3 # Language
+      - b25d8287-7452-41af-8b09-1cdac366bf4e # Sex (Male/Female, Prefer not to say)
+      - 3b612607-cc05-4716-8804-e00f7cec2be2 # Date of Birth (yyyy.mm.dd)
+      - 07923e1b-32a3-4e38-9f55-c64370ccc413 # Height (cm)
+      - 97caeaf3-859f-45b5-968d-81affe58deb8 # Weight (kg)
+      - b1ef90f5-e75f-4300-aba0-b0c69ef81c89 # Activity Level
+  # Reduce Pilot Permission Data
+  - key: 1ed46d47-7cd1-4adc-8dec-7c53ce58b54c
+    mime: application/datau+node
+    description: Reduce Pilot Permission Data
+    children:
+      - 0ee84dd4-90fe-4491-9943-733137753bed # Email
+      - c7d8e90e-5ea3-4629-bc4d-8e5bfc1b8b4c
+      - 41d15c58-af64-4544-ac2a-93bc69cb98b2
+      - a46f3fa9-0123-458f-9b47-0e366f037c16
+      - 0c6aad7b-808b-4bd8-9e6d-1b08b026e48c
+      - d7e3199d-ce8b-4f10-bc63-166295fff99b
+      - 024de1e2-515e-4b5e-ac2d-5b0e0e67d6c7
+      - 7d469b35-1bdd-4fa9-8d8b-5789549b9959
+      - 4bbb7c73-e90c-41e0-b635-05e646a021c9
+      - 1bddbf2e-7937-4bab-b1f4-2f0b6d4aafe5
+      - f000aeb9-1b91-41c2-870a-3dcaf6761388
   # First Name & DoB
   - key: 5f0171db-b3c6-4bbb-9b99-322e057cb9dc
     mime: application/datau+node
-    description: First Name & DoB
+    description: First Name & Date of Birth
     children:
-      - ab493ade-2f3f-11eb-a11b-23fff9ac0d99
-      - 3b612607-cc05-4716-8804-e00f7cec2be2
+      - ab493ade-2f3f-11eb-a11b-23fff9ac0d99 # First Name
+      - 3b612607-cc05-4716-8804-e00f7cec2be2 # Date of Birth
   ############################### Process Definitions ###############################
 process:
   - key: 1234f4fd-8ff3-46ab-a950-8f136addba5c

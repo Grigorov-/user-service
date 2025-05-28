@@ -56,6 +56,7 @@ public class UserDataRepositoryImpl implements UserDataRepository {
     public boolean delete(String userPublicKey, String dataId) {
         String userId = getUserIdByPublicKey(userPublicKey);
         if (userId == null) {
+            logger.error("Data not found for user: {} and dataId {}", userId, dataId);
             return false;
         }
 
@@ -69,7 +70,7 @@ public class UserDataRepositoryImpl implements UserDataRepository {
 
             getUserDataDocumentReference(dataId, userId)
                     .delete();
-
+            logger.info("Deleted user data for user: {} and dataId {}", userId, dataId);
         } catch (Exception e) {
             logger.error("Unable to delete user data for user {} data id {}", userPublicKey, dataId, e);
             return false;

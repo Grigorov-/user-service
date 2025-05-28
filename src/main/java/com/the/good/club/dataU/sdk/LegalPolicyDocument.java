@@ -1,5 +1,8 @@
 package com.the.good.club.dataU.sdk;
 
+/**
+ * Wrapper for terms &amp; conditions document associated with a permission request
+ */
 public class LegalPolicyDocument {
     private String url;
     private String hash;
