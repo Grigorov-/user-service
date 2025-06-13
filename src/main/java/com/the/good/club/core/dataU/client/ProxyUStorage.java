@@ -5,9 +5,6 @@ import com.the.good.club.core.spi.UserDataRepository;
 import com.the.good.club.dataU.sdk.DataIdentificationGraphNode;
 import com.the.good.club.dataU.sdk.ProxyUClientStorage;
 import com.the.good.club.dataU.sdk.UserData;
-import com.the.good.club.dataU.sdk.protocol.DataField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,14 +14,11 @@ import static com.the.good.club.dataU.sdk.ClientUtils.byteStringToUUIDString;
 import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.dataIdentificationGraph;
 import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.getChildrenUUIDs;
 import static com.the.good.club.dataU.sdk.DataIdentificationGraphHelper.getNodeName;
-import static com.the.good.club.dataU.sdk.ProxyUClient.APPLICATION_NODE_MIME_TYPE;
 import static java.util.Base64.getEncoder;
 
 @Component
 public class ProxyUStorage implements ProxyUClientStorage {
-    private static final Logger logger = LoggerFactory.getLogger(ProxyUStorage.class);
     private static final String APPLICATION_NODE_MIME_TYPE = "application/datau+node";
-
 
     private final UserDataRepository userDataRepository;
 
