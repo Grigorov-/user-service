@@ -21,7 +21,7 @@ public class EmailConnector {
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
-            helper.setSubject("Verify Your Account");
+            helper.setSubject(subject);
             helper.setText(text, true);
 
             emailSender.send(message);

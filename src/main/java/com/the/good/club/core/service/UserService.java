@@ -100,7 +100,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private String requestPermission(String publicKey, User user) throws NoSuchAlgorithmException, IOException {
+    private String requestPermission(String publicKey, User user) {
         String permissionMessage = null;
         try {
             permissionMessage = getPermissionMessage(publicKey, user);
@@ -122,7 +122,7 @@ public class UserService {
         ByteString dataRightsSubject = getDataRightsSubject(publicKey);
 
         // use one of the fields names present in the data identification graph; see them in didgraph.yml from the SDK
-        ByteString data = DataIdentificationGraphHelper.getNodeUUID("Personal Information");
+        ByteString data = DataIdentificationGraphHelper.getNodeUUID("Name & Email");
 
         ByteString individualProcess = DataIdentificationGraphHelper.getProcessUUID(DataIdentificationGraphHelper.INDIVIDUAL_PROCESS);
 

@@ -3,26 +3,33 @@ package com.the.good.club.core.data;
 import lombok.Getter;
 
 public enum EmailTemplates {
-    CORRELATION("Verify Your Account for The Good Club Platform",
+    CORRELATION("Connect your Good Club account with DataU",
             """
            <p>Hello,</p>
            <p>
-           Thank you for registering with <strong>The Good Club</strong>.
+           <strong>Welcome to The Good Club! 🌱</strong>
            </p>
         
            <p>
-           To complete your registration, please verify your identity by clicking the link below.
-           </p>
-           <p><a href="%s">👉 Verify Your Account:</a></p>
-           <p>
-           This will securely associate your DataU profile with your new account.
+           To complete your registration, please connect your account with DataU.
            </p>
         
            <p>
-            <p>
-            If you did not initiate this registration, you can safely ignore this message.
-            </p>
-            <p>
+           DataU is a trusted European service that helps you:
+           </p>
+           <ul>
+               <li>Stay in control of your personal data</li>
+               <li>Easily see and manage the consents you give</li>
+               <li>Be sure everything is protected under GDPR rules</li>
+           </ul>
+           <p><a href="%s">👉 Connect with DataU:</a></p>
+           <p>
+           This quick step links your Good Club account to DataU, so you always know how your data is used and can change your preferences anytime.            </p>
+           </p>
+           <p>
+           If you didn’t register at Good Club, you can safely ignore this message.
+           </p>
+           <p>
             Best regards,<br>
             The Good Club Team
             </p>
@@ -42,6 +49,8 @@ public enum EmailTemplates {
  
     <p>Your account will remain inactive until these actions are completed.</p>
  
+    <p>
+    </p>
     <p>If you have any questions, feel free to contact us.</p>
  
      <p>
