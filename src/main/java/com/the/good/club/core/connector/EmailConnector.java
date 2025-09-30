@@ -1,6 +1,7 @@
 package com.the.good.club.core.connector;
 
 import jakarta.mail.MessagingException;
+import java.nio.charset.StandardCharsets;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
