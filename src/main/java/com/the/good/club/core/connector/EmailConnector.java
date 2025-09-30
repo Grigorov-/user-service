@@ -24,7 +24,8 @@ public class EmailConnector {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text, true);
-            helper.setFrom(FROM_ADDRESS, FROM_NAME);
+            helper.setFrom(new InternetAddress(
+                FROM_ADDRESS, FROM_NAME, StandardCharsets.UTF_8.name()));
 
             emailSender.send(message);
         } catch (MailException | MessagingException exception) {
