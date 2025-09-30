@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class EmailConnector {
-
+    private static final String FROM_ADDRESS = "bojko002@gmail.com";
+    private static final String FROM_NAME    = "The Good Club";
 
     @Autowired
     private JavaMailSender emailSender;
@@ -23,6 +24,7 @@ public class EmailConnector {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(text, true);
+            helper.setFrom(FROM_ADDRESS, FROM_NAME);
 
             emailSender.send(message);
         } catch (MailException | MessagingException exception) {
