@@ -19,7 +19,7 @@ public class EmailConnector {
     @Autowired
     private JavaMailSender emailSender;
 
-    public void sendSimpleMessage(String to, String subject, String text) throws UnsupportedEncodingException {
+    public void sendSimpleMessage(String to, String subject, String text) {
         try {
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -30,7 +30,7 @@ public class EmailConnector {
                 FROM_ADDRESS, FROM_NAME, StandardCharsets.UTF_8.name()));
 
             emailSender.send(message);
-        } catch (MailException | MessagingException exception) {
+        } catch (MailException | MessagingException | UnsupportedEncodingException exception) {
             System.out.println(exception.getMessage());
         }
     }
